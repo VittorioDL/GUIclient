@@ -20,7 +20,7 @@ public class Main
        InputStreamReader in = new InputStreamReader(System.in);
        BufferedReader tastiera = new BufferedReader(in);
        ConnessioneAServer conn=new ConnessioneAServer("127.0.0.1",2000);
-    
+       
        while(true)
        {
            String richiesta=tastiera.readLine();

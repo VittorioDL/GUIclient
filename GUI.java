@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 public class GUI extends JFrame implements ActionListener, KeyListener, MouseListener
 {
+
     Timer t = new Timer(10, this);
     public GUI()
     {  
@@ -16,11 +17,11 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         
         t.setActionCommand("TIMER");
         
-       
-        
-       
+     
         t.start();
     }
+    
+    
     
     public void actionPerformed(ActionEvent e)
     {
