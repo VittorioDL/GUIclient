@@ -1,6 +1,7 @@
 //
 //  ESEMPIO DI STRUTTURA DI UN CLIENT
 //
+//prova modifica
 import java.io.*;
 import java.awt.event.*;
 
