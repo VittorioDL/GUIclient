@@ -20,19 +20,21 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
     Timer t_utenti_collegati = new Timer(5000, this);
     Timer t_messaggi_ricevuti = new Timer(2000, this);
     
-    JPanel right = new JPanel(new GridBagLayout());
+    JPanel right = new JPanel();
     JPanel center = new JPanel();
     JPanel down = new JPanel();
     
-    JScrollPane barraUtenti;// = new JScrollPane(right, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    JScrollPane barraUtenti = new JScrollPane(right, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    
+    //Componenti per inserimento nickname
     JLabel inserisciNickname;
-    JTextField textField;     //textfield per inserimento username
-    
-    JTextField textFieldMex;  //textfield per invio messaggi
+    JTextField textField;     
     JButton inviaNick;
-    JButton inviaMex;
     
-    GridBagConstraints gbc = new GridBagConstraints();
+    //Componenti per invio messaggi
+    JButton inviaMex;
+    JTextField textFieldMex;  
+    
     public GUI()
     {  
         //Connessione con il server
@@ -47,15 +49,16 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         setLayout(new BorderLayout());
  
         center.setLayout(new FlowLayout(FlowLayout.CENTER));
+        center.setBackground(new Color(0, 255, 0));
         add(center, BorderLayout.CENTER);
         
         right.setPreferredSize(new Dimension(160, 770));
         right.setBackground(new Color(217, 217, 217));
-        
+        right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
         
         down.setPreferredSize(new Dimension(850, 80));
+        down.setBackground(new Color(255, 0, 0));
         add(down, BorderLayout.SOUTH);
-        
         
         //JLabel inserimento nickname
         inserisciNickname = new JLabel("Inserisci nickname");
@@ -85,7 +88,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         t_utenti_collegati.setActionCommand("TUC");
         t_messaggi_ricevuti.setActionCommand("TMR");
      
-        
         setVisible(true);
     }
     
@@ -144,12 +146,16 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                 if(risposta.compareTo("ACCEPTED")==0)
                 {
                     inserimentoUsername = false;
+                    
                     center.remove(textField);
                     center.remove(inviaNick);
+                    center.remove(inserisciNickname);
+                    
                     down.add(textFieldMex);
                     down.add(inviaMex);
+                    
                     textFieldMex.setVisible(true);
-                    center.remove(inserisciNickname);
+                    
                     t_utenti_collegati.start();
                     t_messaggi_ricevuti.start();
                     aggiuntaBarraUtenti();
@@ -159,8 +165,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                     inserisciNickname.setText("Username già in uso!");
                 }
                 
-                invalidate();
-                validate();
+                revalidate();
                 repaint();
             }
             
@@ -177,30 +182,29 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
     
     public void aggiuntaBarraUtenti()
     {
-        add(right, BorderLayout.EAST);
-        barraUtenti = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        //barraUtenti.setPreferredSize(new Dimension(160, 770));
-        right.add(barraUtenti);
+        //Aggiunta label "Utenti"
+        add(BorderLayout.EAST, barraUtenti);
         
-        gbc.insets = new Insets(4,4,4,4);
-                
-        gbc.gridy = 10;
-        gbc.gridx = 1;
         JLabel labelUtenti = new JLabel("Utenti");
         labelUtenti.setVisible(true);
-        labelUtenti.setFont(new Font("Century Gothic", Font.PLAIN, 20));    
-        right.add(labelUtenti, gbc);
+        labelUtenti.setFont(new Font("Century Gothic", Font.PLAIN, 20));
+        labelUtenti.setAlignmentX(right.CENTER_ALIGNMENT);
+        right.add(labelUtenti);
         
         for(int i = 0; i < utenti.size(); i++)
         {
-            gbc.gridy += 20;
             JLabel U = new JLabel(utenti.get(i));
             U.setFont(new Font("Century Gothic", Font.PLAIN, 15));  
+            U.setAlignmentX(right.CENTER_ALIGNMENT);
             U.setVisible(true);
-            right.add(U, gbc);
+            right.add(U);
         }
-        invalidate();
-        validate();
+        
+        //right.add(barraUtenti);
+        
+        
+        right.setVisible(true);
+        revalidate();
         repaint();
     }
     
