@@ -25,6 +25,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
     JPanel down = new JPanel();
     
     JScrollPane barraUtenti = new JScrollPane(right, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    JScrollPane barraMessaggi = new JScrollPane(center, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
     
     //Componenti per inserimento nickname
     JLabel inserisciNickname;
@@ -49,15 +50,15 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         setLayout(new BorderLayout());
  
         center.setLayout(new FlowLayout(FlowLayout.CENTER));
-        center.setBackground(new Color(0, 255, 0));
+        center.setBackground(new Color(240, 240, 240));
         add(center, BorderLayout.CENTER);
         
         right.setPreferredSize(new Dimension(160, 770));
-        right.setBackground(new Color(217, 217, 217));
+        right.setBackground(new Color(157, 214, 233));
         right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
         
         down.setPreferredSize(new Dimension(850, 80));
-        down.setBackground(new Color(255, 0, 0));
+        down.setBackground(new Color(229, 239, 248));
         add(down, BorderLayout.SOUTH);
         
         //JLabel inserimento nickname
@@ -133,7 +134,9 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         //RCVD--> Riceve nuovi messasggi
         if(e.getActionCommand() == "TMR")
         {
-            //richiesta = "RCVD"+clientNick;
+           /*add(BorderLayout.CENTER, barraMessaggi);
+           revalidate();
+           repaint();*/
         }
         
         if(e.getActionCommand() == "INVIA")
@@ -141,28 +144,35 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             //NICK--> Inserimento Username
             if(inserimentoUsername) 
             {
-                risposta = conn.risposta("NICK"+textField.getText());
-                System.out.println("Risposta server a richiesta NICK: "+risposta);
-                if(risposta.compareTo("ACCEPTED")==0)
+                if(textField.getText().contains("§")) 
                 {
-                    inserimentoUsername = false;
-                    
-                    center.remove(textField);
-                    center.remove(inviaNick);
-                    center.remove(inserisciNickname);
-                    
-                    down.add(textFieldMex);
-                    down.add(inviaMex);
-                    
-                    textFieldMex.setVisible(true);
-                    
-                    t_utenti_collegati.start();
-                    t_messaggi_ricevuti.start();
-                    aggiuntaBarraUtenti();
+                    inserisciNickname.setText("<html><font color='red'> Carattere § non valido!</font></html>");
                 }
-                else if(risposta.compareTo("DECLINED")==0)
-                { 
-                    inserisciNickname.setText("Username già in uso!");
+                else 
+                {
+                    risposta = conn.risposta("NICK"+textField.getText());
+                    if(risposta.compareTo("ACCEPTED")==0)
+                    {
+                        inserimentoUsername = false;
+                    
+                        center.remove(textField);
+                        center.remove(inviaNick);
+                        center.remove(inserisciNickname);
+                    
+                        down.add(textFieldMex);
+                        down.add(inviaMex);
+                    
+                        textFieldMex.setVisible(true);
+                    
+                        t_utenti_collegati.start();
+                        t_messaggi_ricevuti.start();
+                        aggiuntaBarraUtenti();
+                    }
+                
+                    else if(risposta.compareTo("DECLINED")==0)
+                    { 
+                        inserisciNickname.setText("<html><font color='red'> Username non disponibile!</font></html>");
+                    }
                 }
                 
                 revalidate();
@@ -172,6 +182,14 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             //TEXT--> Invia un messaggio
             else 
             {
+                if(textFieldMex.getText().contains("§"))
+                {
+                    //Display error
+                }
+                else
+                {
+                    //risposta = conn.risposta(TODO);
+                }
                 
             }
             
@@ -182,9 +200,9 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
     
     public void aggiuntaBarraUtenti()
     {
-        //Aggiunta label "Utenti"
         add(BorderLayout.EAST, barraUtenti);
         
+        //Aggiunta label "Utenti"
         JLabel labelUtenti = new JLabel("Utenti");
         labelUtenti.setVisible(true);
         labelUtenti.setFont(new Font("Century Gothic", Font.PLAIN, 20));
@@ -199,11 +217,18 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             U.setVisible(true);
             right.add(U);
         }
-        
-        //right.add(barraUtenti);
-        
-        
+
         right.setVisible(true);
+        revalidate();
+        repaint();
+    }
+    
+    public void aggiuntaMessaggi()
+    {
+        /*
+         Per ogni messaggio nuovo aggiunge a center un JPanel contenente
+         il messaggio, il mittente, il destinatario e la data
+         */
         revalidate();
         repaint();
     }
