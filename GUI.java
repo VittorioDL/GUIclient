@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.io.*;
+import java.lang.*;
 
 public class GUI extends JFrame implements ActionListener, KeyListener, MouseListener
 {
@@ -35,6 +36,9 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
     //Componenti per invio messaggi
     JButton inviaMex;
     JTextField textFieldMex;  
+    
+    //JButton per disconnettersi
+    JButton quit;
     
     public GUI()
     {  
@@ -72,11 +76,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         textField.setPreferredSize(new Dimension(50, 24));
         center.add(textField);
         
-        //Text field per scrivere il messaggio
-        textFieldMex = new JTextField("", 50);
-        textFieldMex.setPreferredSize(new Dimension(50, 24));
-        
-        
         //Pulsante per invio nickname
         inviaNick = new JButton("INVIA");
         center.add(inviaNick);
@@ -85,6 +84,14 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         //Pulsante per invio messaggio
         inviaMex = new JButton("INVIA");
         inviaMex.addActionListener(this);
+        
+        //Text field per scrivere il messaggio
+        textFieldMex = new JTextField("", 50);
+        textFieldMex.setPreferredSize(new Dimension(50, 24));
+        
+        //Pulsante per disconnettersi
+        quit = new JButton("QUIT");
+        quit.addActionListener(this);
         
         t_utenti_collegati.setActionCommand("TUC");
         t_messaggi_ricevuti.setActionCommand("TMR");
@@ -102,35 +109,20 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         //USRS--> Riceve i nomi dei partecipanti alla chat
         if(e.getActionCommand() == "TUC")
         {    
-            if(utenti.size()==0)
-            {
-                risposta = conn.risposta("USRS");
-                //Server: USERS[n1]§[n2]§[n3]...
-                String[] users = risposta.split("§");
-                utenti.add(users[0].substring(5));
+            utenti.clear();
+            risposta = conn.risposta("USRS");
+            //Server: USERS[n1]§[n2]§[n3]...
+            String[] users = risposta.split("§");
+            utenti.add(users[0].substring(5));
                 
-                if(users.length>1)
+            if(users.length>1)
+            {
+                for(int i = 1; i <= users.length-1; i++)
                 {
-                    for(int i = 1; i <= users.length-1; i++) utenti.add(users[i]);
+                    utenti.add(users[i]);
                 }
             }
-            
-            else 
-            {
-                risposta = conn.risposta("USRS");
-                //Server: USERS[n1]§[n2]§[n3]...
-                String[] users = risposta.split("§");
-                utenti.set(0, users[0].substring(5));
-                
-                if(users.length>1)
-                {
-                    for(int i = 1; i <= users.length-1; i++)
-                    {
-                        if(i > utenti.size()-1) utenti.add(users[i]);
-                        else utenti.set(i, users[i]);
-                    }
-                }
-            }
+            for(int i = 0; i < utenti.size(); i++) System.out.println("Utente n^"+i+": "+utenti.get(i));
             
             right.removeAll();
             aggiuntaBarraUtenti();
@@ -159,15 +151,15 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                     if(risposta.compareTo("ACCEPTED")==0)
                     {
                         inserimentoUsername = false;
-                    
+                        clientNick = textField.getText();
+                        
                         center.remove(textField);
                         center.remove(inviaNick);
                         center.remove(inserisciNickname);
                     
+                        down.add(quit);
                         down.add(textFieldMex);
                         down.add(inviaMex);
-                    
-                        textFieldMex.setVisible(true);
                     
                         t_utenti_collegati.start();
                         t_messaggi_ricevuti.start();
@@ -201,6 +193,32 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             textFieldMex.setText("");
             textField.setText("");
         }
+        
+        if(e.getActionCommand() == "QUIT")
+        {
+            conn.risposta("QUIT"+clientNick);
+            utenti.remove(clientNick);
+            
+            t_utenti_collegati.stop();
+            t_messaggi_ricevuti.stop();
+            
+            inserimentoUsername = true;
+            
+            center.removeAll();
+            down.removeAll();
+            right.removeAll();
+            
+            revalidate();
+            repaint();
+            
+            inserisciNickname.setText("<html><font color='black'> Inserisci nickname</font></html>");
+            center.add(inserisciNickname);
+            center.add(textField);
+            center.add(inviaNick);
+       
+            revalidate();
+            repaint();
+        }
     }
     
     public void aggiuntaBarraUtenti()
@@ -214,13 +232,21 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         labelUtenti.setAlignmentX(right.CENTER_ALIGNMENT);
         right.add(labelUtenti);
         
+        JLabel me = new JLabel("Me: "+clientNick);
+        me.setFont(new Font("Century Gothic", Font.PLAIN, 15));  
+        me.setAlignmentX(right.CENTER_ALIGNMENT);
+        me.setVisible(true);
+        right.add(me);
         for(int i = 0; i < utenti.size(); i++)
         {
-            JLabel U = new JLabel(utenti.get(i));
-            U.setFont(new Font("Century Gothic", Font.PLAIN, 15));  
-            U.setAlignmentX(right.CENTER_ALIGNMENT);
-            U.setVisible(true);
-            right.add(U);
+            if(utenti.get(i).compareTo(clientNick) != 0)
+            {
+                JLabel U = new JLabel(utenti.get(i));
+                U.setFont(new Font("Century Gothic", Font.PLAIN, 15));  
+                U.setAlignmentX(right.CENTER_ALIGNMENT);
+                U.setVisible(true);
+                right.add(U);
+            } 
         }
 
         right.setVisible(true);
@@ -237,32 +263,10 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         revalidate();
         repaint();
     }
-    
-    public String inviaRichiesta()
+     
+    public void mousePressed(MouseEvent e)
     {
-        String appo = richiesta;
-        richiesta = "";
-        return appo;
-    }
-    
-    public void riceviRisposta(String r)
-    {
-        risposta = r;
-    }
-    
-    public void keyReleased(KeyEvent e)
-    {
-        
-    }
-    
-    public void keyTyped(KeyEvent e)
-    {
-        
-    }
-    
-    public void keyPressed(KeyEvent e)
-    {
-       
+
     }
     
     public void mouseExited(MouseEvent e)
@@ -280,14 +284,24 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         
     }
     
-    public void mousePressed(MouseEvent e)
-    {
-      
-    }
-    
     public void mouseClicked(MouseEvent e)
     {
            
+    }
+    
+    public void keyReleased(KeyEvent e)
+    {
+        
+    }
+    
+    public void keyTyped(KeyEvent e)
+    {
+        
+    }
+    
+    public void keyPressed(KeyEvent e)
+    {
+       
     }
     
 }
