@@ -46,7 +46,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         //Layout del JFrame
         setSize(700, 850);
         setLocation(50, 50);
-        setResizable(false);
+        setResizable(true);
         setLayout(new BorderLayout());
  
         center.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -90,6 +90,11 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         t_messaggi_ricevuti.setActionCommand("TMR");
      
         setVisible(true);
+    }
+    
+    public static void main(String args[])
+    {
+        new GUI();
     }
     
     public void actionPerformed(ActionEvent e)
