@@ -4,6 +4,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.io.*;
 import java.lang.*;
+import java.util.Date;
 
 public class GUI extends JFrame implements ActionListener, KeyListener, MouseListener
 {
@@ -13,6 +14,8 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
     String risposta;
     String messaggio="";
     String clientNick;
+    String selectedUser = " ";
+    
     boolean inserimentoUsername = true;
     
     ArrayList<String> utenti = new ArrayList(); 
@@ -52,12 +55,14 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         setLocation(50, 50);
         setResizable(true);
         setLayout(new BorderLayout());
- 
+        
+        center.setPreferredSize(new Dimension(540, 770));
         center.setLayout(new FlowLayout(FlowLayout.CENTER));
         center.setBackground(new Color(240, 240, 240));
         add(center, BorderLayout.CENTER);
+        add(new JScrollPane(center, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
         
-        right.setPreferredSize(new Dimension(160, 770));
+        right.setPreferredSize(new Dimension(160, 770)); 
         right.setBackground(new Color(157, 214, 233));
         right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
         
@@ -122,18 +127,51 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                     utenti.add(users[i]);
                 }
             }
-            for(int i = 0; i < utenti.size(); i++) System.out.println("Utente n^"+i+": "+utenti.get(i));
             
             right.removeAll();
             aggiuntaBarraUtenti();
         }
         
-        //RCVD--> Riceve nuovi messasggi
+        //RCVD--> Riceve nuovi messaggi
         if(e.getActionCommand() == "TMR")
         {
-           /*add(BorderLayout.CENTER, barraMessaggi);
-           revalidate();
-           repaint();*/
+            Messaggio new_mex;
+            messaggi.clear();
+            risposta = conn.risposta("RCVD"+clientNick);
+            
+            if(!(risposta.compareTo("NO MEX")==0))
+            {
+                String[] new_messaggi = risposta.split("§");
+                int num_mex = 1;
+            
+                //RF<NM1>§<TEXT1>§<DATE1>§<MODE1>§<NM2>§<TEXT2>§<DATE2>§<MODE2>§<NM1>§<TEXT1>§<DATE1>§<MODE1>
+                for(int i = 0; i < new_messaggi.length/4; i++)
+                {
+                    String[] data = new_messaggi[2+i*4].split("/");
+                    
+                    Date data_mex = new Date(); 
+                    data_mex.setHours(Integer.parseInt(data[0]));
+                    data_mex.setMinutes(Integer.parseInt(data[1]));
+                    data_mex.setSeconds(Integer.parseInt(data[2]));
+                    
+                    if(new_messaggi[3].charAt(0) == 'B')
+                    {
+                        if(i == 0) new_mex = new Messaggio(new_messaggi[1], " ", new_messaggi[0].substring(2), data_mex, new_messaggi[3].charAt(0));
+                        else new_mex = new Messaggio(new_messaggi[1+i*4], " ", new_messaggi[i*4], data_mex, new_messaggi[3+i*4].charAt(0));
+                    }
+                    
+                    else 
+                    {
+                        if(i == 0) new_mex = new Messaggio(new_messaggi[1], clientNick, new_messaggi[0].substring(2), data_mex, new_messaggi[3].charAt(0));
+                        else new_mex = new Messaggio(new_messaggi[1+i*4], clientNick, new_messaggi[i*4], data_mex, new_messaggi[3+i*4].charAt(0));
+                    }
+                    
+                    messaggi.add(new_mex);
+                }
+            }
+            
+            //for(int i = 0; i < messaggi.size(); i++) System.out.println(messaggi.get(i).getText()+"-"+messaggi.get(i).getNM()+"-"+messaggi.get(i).getND());
+            aggiuntaMessaggi();
         }
         
         if(e.getActionCommand() == "INVIA")
@@ -179,15 +217,24 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             //TEXT--> Invia un messaggio
             else 
             {
-                if(textFieldMex.getText().contains("§"))
+                if(!textFieldMex.getText().contains("§"))
                 {
-                    //Display error
+                    //TEXT[Mode][Text]§[nM]§[nD]
+                    Date data_mex = new Date(); 
+                    
+                    if(selectedUser.compareTo(" ") == 0) 
+                    {
+                        risposta = conn.risposta("TEXTB"+textFieldMex.getText()+"§"+clientNick+"§"+" ");    
+                        //messaggi.add(new Messaggio(textFieldMex.getText(), " ", clientNick, data_mex, 'B'));
+                    }
+                    
+                    else 
+                    {
+                        risposta = conn.risposta("TEXTU"+textFieldMex.getText()+"§"+clientNick+"§"+selectedUser);
+                        messaggi.add(new Messaggio(textFieldMex.getText(), selectedUser, clientNick, data_mex, 'U'));
+                    }    
+                    selectedUser = " ";
                 }
-                else
-                {
-                    //risposta = conn.risposta(TODO);
-                }
-                
             }
             
             textFieldMex.setText("");
@@ -208,10 +255,12 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             down.removeAll();
             right.removeAll();
             
+            center.setLayout(new FlowLayout(FlowLayout.CENTER));
             revalidate();
             repaint();
             
             inserisciNickname.setText("<html><font color='black'> Inserisci nickname</font></html>");
+
             center.add(inserisciNickname);
             center.add(textField);
             center.add(inviaNick);
@@ -245,6 +294,11 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                 U.setFont(new Font("Century Gothic", Font.PLAIN, 15));  
                 U.setAlignmentX(right.CENTER_ALIGNMENT);
                 U.setVisible(true);
+                U.addMouseListener(this);
+                U.setName(utenti.get(i));
+                
+                if(utenti.get(i).compareTo(selectedUser)==0) U.setBorder(BorderFactory.createLineBorder(new Color(255, 92, 51), 2));
+                
                 right.add(U);
             } 
         }
@@ -259,49 +313,80 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         /*
          Per ogni messaggio nuovo aggiunge a center un JPanel contenente
          il messaggio, il mittente, il destinatario e la data
-         */
+        */
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+
+        for(int i = 0; i < messaggi.size(); i++)
+        {
+            //tutto:  700, 850
+            //right:  160, 770  
+            //down :  850,  80
+            //center: 540, 770
+            JPanel mex_panel = new JPanel();
+            mex_panel.setPreferredSize(new Dimension(500, 160));
+            mex_panel.setLayout(new BoxLayout(mex_panel, BoxLayout.Y_AXIS));
+            mex_panel.setBackground(new Color(235, 235, 235));
+            
+            JLabel nM_nD;
+            if(messaggi.get(i).getMode() == 'B') nM_nD = new JLabel("da "+messaggi.get(i).getNM()+" a tutti ("+messaggi.get(i).getDate()+")");
+            else nM_nD = new JLabel("da "+messaggi.get(i).getNM()+" a me ("+messaggi.get(i).getDate()+")");
+            
+            nM_nD.setFont(new Font("Century Gothic", Font.PLAIN, 17));  
+            
+            JLabel mex_text = new JLabel(messaggi.get(i).getText());
+            mex_text.setFont(new Font("Century Gothic", Font.PLAIN, 22));  
+            
+            mex_panel.add(nM_nD);
+            mex_panel.add(mex_text);
+
+            center.add(mex_panel);
+            //Distanziatore tra messaggi
+            center.add(Box.createRigidArea(new Dimension(0, 8)));
+        }
+        center.setVisible(true);
         revalidate();
         repaint();
     }
      
     public void mousePressed(MouseEvent e)
     {
-
+        if(e.getButton() == MouseEvent.BUTTON1 && e.getSource() instanceof JLabel)
+        {
+            JLabel source = (JLabel)e.getSource();
+            
+            if(source.getName().compareTo(selectedUser) == 0)
+            {
+                source.setBorder(BorderFactory.createLineBorder(new Color(255, 92, 51), 0));
+                selectedUser = " ";
+                t_utenti_collegati.stop();
+                right.removeAll();
+                aggiuntaBarraUtenti();
+                t_utenti_collegati.start();
+            }
+            
+            else 
+            {
+                selectedUser = source.getName();
+            
+                t_utenti_collegati.stop();
+                right.removeAll();
+                aggiuntaBarraUtenti();
+                t_utenti_collegati.start();
+            }
+        }
     }
     
-    public void mouseExited(MouseEvent e)
-    {
-        
-    }
+    public void mouseExited(MouseEvent e){}
     
-    public void mouseEntered(MouseEvent e)
-    {
-        
-    }
+    public void mouseEntered(MouseEvent e){}
     
-    public void mouseReleased(MouseEvent e)
-    {
-        
-    }
+    public void mouseReleased(MouseEvent e){}
     
-    public void mouseClicked(MouseEvent e)
-    {
-           
-    }
+    public void mouseClicked(MouseEvent e){}
     
-    public void keyReleased(KeyEvent e)
-    {
-        
-    }
+    public void keyReleased(KeyEvent e){}
     
-    public void keyTyped(KeyEvent e)
-    {
-        
-    }
+    public void keyTyped(KeyEvent e){}
     
-    public void keyPressed(KeyEvent e)
-    {
-       
-    }
-    
+    public void keyPressed(KeyEvent e){}
 }
