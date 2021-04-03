@@ -17,6 +17,8 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
     String selectedUser = " ";
     
     boolean inserimentoUsername = true;
+    int centerY = 770;
+    int rightY = 770;
     
     ArrayList<String> utenti = new ArrayList(); 
     ArrayList<Messaggio> messaggi = new ArrayList();
@@ -56,13 +58,13 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
         setResizable(true);
         setLayout(new BorderLayout());
         
-        center.setPreferredSize(new Dimension(540, 770));
+        center.setPreferredSize(new Dimension(540, centerY));
         center.setLayout(new FlowLayout(FlowLayout.CENTER));
         center.setBackground(new Color(240, 240, 240));
         add(center, BorderLayout.CENTER);
         add(new JScrollPane(center, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
         
-        right.setPreferredSize(new Dimension(160, 770)); 
+        right.setPreferredSize(new Dimension(160, rightY)); 
         right.setBackground(new Color(157, 214, 233));
         right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
         
@@ -153,7 +155,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                     data_mex.setHours(Integer.parseInt(data[0]));
                     data_mex.setMinutes(Integer.parseInt(data[1]));
                     data_mex.setSeconds(Integer.parseInt(data[2]));
-                    
+
                     if(new_messaggi[3].charAt(0) == 'B')
                     {
                         if(i == 0) new_mex = new Messaggio(new_messaggi[1], " ", new_messaggi[0].substring(2), data_mex, new_messaggi[3].charAt(0));
@@ -165,12 +167,10 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                         if(i == 0) new_mex = new Messaggio(new_messaggi[1], clientNick, new_messaggi[0].substring(2), data_mex, new_messaggi[3].charAt(0));
                         else new_mex = new Messaggio(new_messaggi[1+i*4], clientNick, new_messaggi[i*4], data_mex, new_messaggi[3+i*4].charAt(0));
                     }
-                    
                     messaggi.add(new_mex);
                 }
             }
             
-            //for(int i = 0; i < messaggi.size(); i++) System.out.println(messaggi.get(i).getText()+"-"+messaggi.get(i).getNM()+"-"+messaggi.get(i).getND());
             aggiuntaMessaggi();
         }
         
@@ -236,7 +236,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
                     selectedUser = " ";
                 }
             }
-            
+            aggiuntaMessaggi();
             textFieldMex.setText("");
             textField.setText("");
         }
@@ -325,11 +325,26 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             JPanel mex_panel = new JPanel();
             mex_panel.setPreferredSize(new Dimension(500, 160));
             mex_panel.setLayout(new BoxLayout(mex_panel, BoxLayout.Y_AXIS));
-            mex_panel.setBackground(new Color(235, 235, 235));
+            
             
             JLabel nM_nD;
-            if(messaggi.get(i).getMode() == 'B') nM_nD = new JLabel("da "+messaggi.get(i).getNM()+" a tutti ("+messaggi.get(i).getDate()+")");
-            else nM_nD = new JLabel("da "+messaggi.get(i).getNM()+" a me ("+messaggi.get(i).getDate()+")");
+            if(messaggi.get(i).getMode() == 'B') 
+            {
+                nM_nD = new JLabel("da "+messaggi.get(i).getNM()+" a tutti ("+messaggi.get(i).getDate()+")");
+                mex_panel.setBackground(new Color(154, 203, 250));
+            }
+
+            else if(messaggi.get(i).getNM().compareTo(clientNick)==0)
+            {   
+                nM_nD = new JLabel("a "+messaggi.get(i).getND()+" ("+messaggi.get(i).getDate()+")");
+                mex_panel.setBackground(new Color(230, 242, 255));
+            }
+            
+            else
+            {
+                nM_nD = new JLabel("da "+messaggi.get(i).getNM()+" a me ("+messaggi.get(i).getDate()+")");
+                mex_panel.setBackground(new Color(204, 255, 204));
+            }
             
             nM_nD.setFont(new Font("Century Gothic", Font.PLAIN, 17));  
             
@@ -342,6 +357,8 @@ public class GUI extends JFrame implements ActionListener, KeyListener, MouseLis
             center.add(mex_panel);
             //Distanziatore tra messaggi
             center.add(Box.createRigidArea(new Dimension(0, 8)));
+            centerY += 168;
+            center.setPreferredSize(new Dimension(540, centerY));
         }
         center.setVisible(true);
         revalidate();
